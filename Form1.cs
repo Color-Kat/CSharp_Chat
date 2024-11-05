@@ -16,13 +16,14 @@ namespace MyChat
 
         private void sendButton_Click(object sender, EventArgs e)
         {
-            Chat.Send(chatBox);
+            Chat.Send(chatBox, semaphoreTimer);
         }
 
         private void semaphoreTimer_Tick(object sender, EventArgs e)
         {
             // Every tick update semaphore
             Chat.Load(chatBox, semaphoreTimer);
+            // MessageBox.Show("123");
         }
     }
 }

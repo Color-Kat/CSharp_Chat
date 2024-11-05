@@ -2,9 +2,9 @@
 using System.IO;
 using System.Windows.Forms;
 
-namespace Chat
+namespace MyChat
 {
-    class ChatController
+    class Chat
     {
         private byte[] semaphoreState = new byte[1];
 
@@ -17,15 +17,15 @@ namespace Chat
         {
             ReadSemaphoreState();
 
-            if (IsSemaphoreAvailable())
+            if (IsSemaphoreUpdated())
             {
-                semaphoreTimer.Enabled = true;
-            }
-            else
-            {
-                SetSemaphoreState(false); // Set semaphore to available (0)
+                SetSemaphoreState(false); // Set semaphore to actual (0)
                 chatBox.LoadFile("Chat.rtf");
-                semaphoreTimer.Enabled = false;
+
+                semaphoreTimer.Stop();
+            } else
+            {
+                semaphoreTimer.Start();
             }
         }
 
@@ -33,10 +33,13 @@ namespace Chat
         /// Saves chat content and updates semaphore to indicate file is in use.
         /// </summary>
         /// <param name="chatBox">RichTextBox control with chat content</param>
-        public void Save(RichTextBox chatBox)
+        public void Send(RichTextBox chatBox, System.Windows.Forms.Timer semaphoreTimer)
         {
             chatBox.SaveFile("Chat.rtf");
-            SetSemaphoreState(true); // Set semaphore to in use (1)
+            SetSemaphoreState(true); // Set semaphore to THERE'S SOME UPDATES (1)
+
+
+            semaphoreTimer.Start();
         }
 
         /// <summary>
@@ -53,23 +56,25 @@ namespace Chat
         /// <summary>
         /// Sets the semaphore state to available (0) or in use (1) and writes to file.
         /// </summary>
-        /// <param name="inUse">If true, sets state to in use (1); if false, sets state to available (0)</param>
-        private void SetSemaphoreState(bool inUse)
+        /// <param name="isChatUpdated">If true, sets state to in use (1); if false, sets state to available (0)</param>
+        private void SetSemaphoreState(bool isChatUpdated)
         {
-            semaphoreState[0] = Convert.ToByte(inUse ? '1' : '0');
+            semaphoreState[0] = Convert.ToByte(isChatUpdated ? '1' : '0');
             using (FileStream semaphoreFile = File.OpenWrite("Semaphore.txt"))
             {
                 semaphoreFile.Write(semaphoreState, 0, 1);
             }
+            //MessageBox.Show(isChatUpdated ? "1" : "0");
+
         }
 
         /// <summary>
-        /// Checks if the semaphore is currently available (0).
+        /// Checks if the semaphore is currently available (1).
         /// </summary>
-        /// <returns>True if semaphore state is available (0); false otherwise.</returns>
-        private bool IsSemaphoreAvailable()
+        /// <returns>True if semaphore state is available (1); false otherwise.</returns>
+        private bool IsSemaphoreUpdated()
         {
-            return semaphoreState[0] == Convert.ToByte('0');
+            return semaphoreState[0] == Convert.ToByte('1');
         }
     }
 }
